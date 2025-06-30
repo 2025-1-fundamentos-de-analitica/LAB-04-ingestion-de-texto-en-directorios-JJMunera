@@ -7,6 +7,46 @@ Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 
 
 def pregunta_01():
+    import zipfile
+    import os
+    import pandas as pd
+
+    # 1. Descomprimir archivo zip
+    ruta_zip = 'files/input.zip'
+    carpeta_destino = 'input'
+
+    # Solo descomprime si aún no existe la carpeta
+    if not os.path.exists(carpeta_destino):
+        with zipfile.ZipFile(ruta_zip, 'r') as zip_ref:
+            zip_ref.extractall(carpeta_destino)
+
+    # 2. Función para procesar los archivos y crear un DataFrame
+    def crear_dataset(ruta_base):
+        datos = []
+        for sentimiento in ['positive', 'negative', 'neutral']:
+            carpeta_sentimiento = os.path.join(ruta_base, sentimiento)
+            for archivo in os.listdir(carpeta_sentimiento):
+                ruta_archivo = os.path.join(carpeta_sentimiento, archivo)
+                with open(ruta_archivo, 'r', encoding='utf-8') as f:
+                    frase = f.read().strip()
+                    datos.append({
+                        'phrase': frase,
+                        'target': sentimiento
+                    })
+        return pd.DataFrame(datos)
+
+    # 3. Crear los DataFrames
+    df_train = crear_dataset('input/train')
+    df_test = crear_dataset('input/test')
+
+    # 4. Crear carpeta de salida si no existe
+    os.makedirs('output', exist_ok=True)
+
+    # 5. Guardar CSVs
+    df_train.to_csv('output/train_dataset.csv', index=False)
+    df_test.to_csv('output/test_dataset.csv', index=False)
+
+
     """
     La información requerida para este laboratio esta almacenada en el
     archivo "files/input.zip" ubicado en la carpeta raíz.
@@ -54,8 +94,8 @@ def pregunta_01():
 
     * phrase: Texto de la frase. hay una frase por cada archivo de texto.
     * sentiment: Sentimiento de la frase. Puede ser "positive", "negative"
-      o "neutral". Este corresponde al nombre del directorio donde se
-      encuentra ubicado el archivo.
+    o "neutral". Este corresponde al nombre del directorio donde se
+    encuentra ubicado el archivo.
 
     Cada archivo tendria una estructura similar a la siguiente:
 
