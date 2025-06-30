@@ -3,51 +3,36 @@
 # flake8: noqa
 """
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
+
 """
 
-
 def pregunta_01():
-    import zipfile
     import os
     import pandas as pd
 
-    # 1. Descomprimir archivo zip
-    ruta_zip = 'files/input.zip'
-    carpeta_destino = 'input'
-
-    # Solo descomprime si aún no existe la carpeta
-    if not os.path.exists(carpeta_destino):
-        with zipfile.ZipFile(ruta_zip, 'r') as zip_ref:
-            zip_ref.extractall(carpeta_destino)
-
-    # 2. Función para procesar los archivos y crear un DataFrame
-    def crear_dataset(ruta_base):
+    def crear_dataset(base_dir):
         datos = []
-        for sentimiento in ['positive', 'negative', 'neutral']:
-            carpeta_sentimiento = os.path.join(ruta_base, sentimiento)
-            for archivo in os.listdir(carpeta_sentimiento):
-                ruta_archivo = os.path.join(carpeta_sentimiento, archivo)
-                with open(ruta_archivo, 'r', encoding='utf-8') as f:
-                    frase = f.read().strip()
-                    datos.append({
-                        'phrase': frase,
-                        'target': sentimiento
-                    })
+        for sentiment in ['positive', 'negative', 'neutral']:
+            sentiment_dir = os.path.join(base_dir, sentiment)
+            for file_name in os.listdir(sentiment_dir):
+                file_path = os.path.join(sentiment_dir, file_name)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    phrase = file.read().strip()
+                    datos.append({'phrase': phrase, 'sentiment': sentiment})
         return pd.DataFrame(datos)
 
-    # 3. Crear los DataFrames
-    df_train = crear_dataset('input/train')
-    df_test = crear_dataset('input/test')
+    # Crear datasets
+    train_df = crear_dataset('input/train')
+    test_df = crear_dataset('input/test')
 
-    # 4. Crear carpeta de salida si no existe
+    # Guardar en archivos CSV
     os.makedirs('output', exist_ok=True)
+    train_df.to_csv('output/train_dataset.csv', index=False)
+    test_df.to_csv('output/test_dataset.csv', index=False)
+    
 
-    # 5. Guardar CSVs
-    df_train.to_csv('output/train_dataset.csv', index=False)
-    df_test.to_csv('output/test_dataset.csv', index=False)
 
-
-    """
+"""
     La información requerida para este laboratio esta almacenada en el
     archivo "files/input.zip" ubicado en la carpeta raíz.
     Descomprima este archivo.
