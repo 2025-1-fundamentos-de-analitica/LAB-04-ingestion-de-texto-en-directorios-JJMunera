@@ -6,30 +6,62 @@ Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 
 """
 
+import zipfile
+import os
+import pandas as pd
+
 def pregunta_01():
-    import os
-    import pandas as pd
+    """
+    Genera los archivos train_dataset.csv y test_dataset.csv
+    a partir de los archivos de texto descomprimidos.
+    """
+    # Define the base directory for input and output
+    base_dir = "files"
 
-    def crear_dataset(base_dir):
-        datos = []
-        for sentiment in ['positive', 'negative', 'neutral']:
-            sentiment_dir = os.path.join(base_dir, sentiment)
-            for file_name in os.listdir(sentiment_dir):
-                file_path = os.path.join(sentiment_dir, file_name)
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    phrase = file.read().strip()
-                    datos.append({'phrase': phrase, 'sentiment': sentiment})
-        return pd.DataFrame(datos)
+    # Descomprimir el archivo input.zip
+    # Ensure extraction happens into the 'files' directory
+    with zipfile.ZipFile(os.path.join(base_dir, "input.zip"), "r") as zip_ref:
+        zip_ref.extractall(base_dir) # Extract into 'files' directory
 
-    # Crear datasets
-    train_df = crear_dataset('input/train')
-    test_df = crear_dataset('input/test')
+    # Crear la carpeta de salida si no existe
+    output_dir = os.path.join(base_dir, "output")
+    os.makedirs(output_dir, exist_ok=True)
 
-    # Guardar en archivos CSV
-    os.makedirs('output', exist_ok=True)
-    train_df.to_csv('output/train_dataset.csv', index=False)
-    test_df.to_csv('output/test_dataset.csv', index=False)
-    
+    # Listas para almacenar los datos
+    train_data = []
+    test_data = []
+
+    # Define the input base path
+    input_base_path = os.path.join(base_dir, "input")
+
+    # Recorrer la estructura de carpetas para train
+    for sentiment in ["negative", "positive", "neutral"]:
+        train_path = os.path.join(input_base_path, "train", sentiment)
+        for filename in os.listdir(train_path):
+            if filename.endswith(".txt"):
+                filepath = os.path.join(train_path, filename)
+                with open(filepath, "r", encoding="utf-8") as f:
+                    phrase = f.read().strip()
+                train_data.append({"phrase": phrase, "target": sentiment})
+
+    # Recorrer la estructura de carpetas para test
+    for sentiment in ["negative", "positive", "neutral"]:
+        test_path = os.path.join(input_base_path, "test", sentiment)
+        for filename in os.listdir(test_path):
+            if filename.endswith(".txt"):
+                filepath = os.path.join(test_path, filename)
+                with open(filepath, "r", encoding="utf-8") as f:
+                    phrase = f.read().strip()
+                test_data.append({"phrase": phrase, "target": sentiment})
+
+    # Crear DataFrames de pandas
+    train_df = pd.DataFrame(train_data)
+    test_df = pd.DataFrame(test_data)
+
+    # Guardar los DataFrames como archivos CSV en la carpeta de salida
+    train_df.to_csv(os.path.join(output_dir, "train_dataset.csv"), index=False)
+    test_df.to_csv(os.path.join(output_dir, "test_dataset.csv"), index=False)   
+
 
 
 """
